@@ -24,8 +24,9 @@ export default class CentORMModel {
     private _group   : string
     private _results : string
     private _table   : string
+    private _as      : string 
 
-    constructor(table?: string) {
+    constructor(table?: string, as?: string) {
 
         this._select  = ORMType.SELECT
         this._orderBy = ORMType.ORDER
@@ -35,6 +36,7 @@ export default class CentORMModel {
         this._group   = ORMType.GROUP
         this._results = ""
         this._table   = table
+        this._as      = as
         
     }
 
@@ -48,15 +50,20 @@ export default class CentORMModel {
         return this
     }
 
+    public where(condition: string) {
+        this._results = this._results.concat(ORMType.ENDLINE, this._where, condition)
+        return this
+    }
+
     public orderBy(byColumn: string, orderType: "ASC" | "DESC") {
         this._results = this._results.concat(this._orderBy, byColumn," ", orderType)
         return this
     }
 
-    public join(type: "LEFT" | "RIGHT" | "INNER", target: string, foreignKey: string, refKey: string) {
+    public join(type: "LEFT" | "RIGHT" | "INNER", target: string,foreignKey: string, refKey: string, alias : string = null ) {
         this._results = this._results.concat(ORMType.ENDLINE,type, ORMType.JOIN, target,
             ORMType.FOREIGN_ON,
-            target, ".", foreignKey,
+            alias!== null ? `${alias}.${foreignKey}` : `${target}.${foreignKey}`,
             ORMType.FOREIGN_PAIR, refKey
         )
         return this
@@ -78,12 +85,8 @@ export default class CentORMModel {
         this._results = this._results.concat(`INSERT INTO ${this._table} ${ORMType.ENDLINE}(${key}) ${ORMType.ENDLINE}VALUES${ORMType.ENDLINE}(${values})`)
         return this
     }
-
-
     
     public results() {
         return this._results
     }
-
-
 } 

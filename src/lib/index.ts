@@ -129,9 +129,6 @@ export namespace CentJs {
             return this
         }
 
-        set resultdata(params) {
-            this._result = params
-        }
 
 
         public async Results(options?: "rows" | "rowCount" | "recordset" | "rowsAffected" | "recordsets" | "output",
@@ -150,7 +147,7 @@ export namespace CentJs {
                             data: result[options]
                         })
                     } else {
-                        this.resultdata = result[options] 
+                        return result[options] 
                     }
                 }).catch(error => {
                     console.error(error)
@@ -171,15 +168,11 @@ export namespace CentJs {
                     return options
                         ? (await new Pool(this._connection.config).query(this._query))[options]
                         : (await new Pool(this._connection.config).query(this._query))
-                    
-                    // console.log(pool)
-                    // return this._result = poo
                 } catch (error) {
                     console.error(error);
                     return this._result = []
                 }
             }
-            console.log(this._result)
             return this._result
         }
     }

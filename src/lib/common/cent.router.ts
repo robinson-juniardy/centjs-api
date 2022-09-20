@@ -10,14 +10,20 @@ export default function LoadRouters() {
     let controllerList: Array<any> = []
     for (let file of modules) {
         const controller = fs.readdirSync(path.join(modulePath, file))
-        controllerList = controllerList.concat(path.join(modulePath, file, String(controller)))
+        for (let constructor of controller) {
+                controllerList = controllerList.concat(path.join(modulePath, file, String(constructor)))
+            }
     }
 
     let routers: Array<any> = []
-
+    
     for (let controller of controllerList) {
-        const controllerFileClass = require(controller).default
-        routers = routers.concat(controllerFileClass)
+        let file = require(controller).default
+
+        if (typeof file !== "undefined") {
+            routers = routers.concat(file)
+        }
+        
     }
 
     let router_list : Array<any> = []

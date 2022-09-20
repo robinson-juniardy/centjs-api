@@ -1,19 +1,15 @@
 import { CentJs } from "../../../lib";
-import { MyDB } from "../../services/database";
 // import { App, Route } from "../utils/decorators";
-import { Controller, Middlewares, Routes } from "../../../lib/common/cent.common";
-import { NextFunction } from "express";
+import { Controller, Middlewares } from "../../../lib/common/cent.common";
+import { Get, Post } from "../../../lib/common/cent.factory";
 
-function TestMiddleware(request: CentJs.Request, response: CentJs.Response, next: NextFunction) {
+function TestMiddleware(request: CentJs.Request, response: CentJs.Response, next: CentJs.Next) {
     next()
 }
 
 @Controller("/api")
 export default class Helloworld {
-    @Routes({
-        method: "get",
-        path: "/hello",
-    })
+    @Get("/hello")
     @Middlewares([TestMiddleware])
     public async Helloworld(request: CentJs.Request, response: CentJs.Response) {
         response.json("hello world")

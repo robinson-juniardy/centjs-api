@@ -23,14 +23,18 @@ export enum Methods {
     delete = "delete"
 }
 
+export type TMiddleware = any | any[]
+
 export type MethodHandler = "get" | "post" | "put" | "patch" | "delete"
 
-interface IRouter {
+export interface IRouter {
     method: MethodHandler,
-    path: string
+    path: string,
+    handlerName: string | symbol,
+    middleware?: any
 }
 
-interface IControllerInstance {
+export interface IControllerInstance {
     Router: IRouter[],
     middleware? : any
     handlerName: string | symbol
@@ -42,8 +46,44 @@ export function Controller(basePath: string): ClassDecorator {
     }
 }
 
+export function Get(path: string) {
+    return (target: any, propertyKey: string) => {
+        Reflect.defineMetadata(Methods.get, path, target.constructor)
+        Reflect.defineMetadata(Metadata.propertyKey, propertyKey ,target.constructor)
+    }
+}
+
+export function Post(path: string) {
+    return (target: any, propertyKey: string) => {
+        Reflect.defineMetadata(Methods.post, path ,target.constructor)
+        Reflect.defineMetadata(Metadata.propertyKey, propertyKey ,target.constructor)
+    }
+}
+
+
+export function Patch(path: string) {
+    return (target: any, propertyKey: string) => {
+        Reflect.defineMetadata(Methods.patch, path, target.constructor)
+        Reflect.defineMetadata(Metadata.propertyKey, propertyKey ,target.constructor)
+    }
+}
+
+export function Put(path: string) {
+    return (target: any, propertyKey: string) => {
+        Reflect.defineMetadata(Methods.put, path, target.constructor)
+        Reflect.defineMetadata(Metadata.propertyKey, propertyKey ,target.constructor)
+    }
+}
+
+export function Delete(path: string) {
+    return (target: any, propertyKey: string) => {
+        Reflect.defineMetadata(Methods.delete, path, target.constructor)
+        Reflect.defineMetadata(Metadata.propertyKey, propertyKey ,target.constructor)
+    }
+}
+
 export function Routes(options: IRouter) {
-    return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+    return (target: any, propertyKey: string) => {
         const constructor = target.constructor
         Reflect.defineMetadata(Metadata.routers, options, constructor)
         Reflect.defineMetadata(Metadata.propertyKey, propertyKey, constructor)
@@ -74,32 +114,61 @@ export function Column() {
     }
 }
 
-export function GetInstance<controller>(Controller : new(...args: any[]) => controller) {
-    const Routes: IRouter[] = Reflect.getMetadata(Metadata.routers, Controller)
-    const ControllerInstances : IControllerInstance[] = []
-    const basePath: string = Reflect.getMetadata(Metadata.basepath, Controller)
-    const middlewares : any = Reflect.getMetadata(Metadata.middleware, Controller)
-    const propertyKey: string = Reflect.getMetadata(Metadata.propertyKey, Controller)
-    ControllerInstances.push({
-        Router: Routes,
-        middleware: middlewares,
-        handlerName: propertyKey
-    })
+export function methodDecoratorFactory(method: Methods) {
+    return (path: string, middleware?: any | any[]): MethodDecorator => {
+        return (target: any, propertyKey: string) => {
+            const controller = target.constructor
 
-    const instances: {
-        [propertyKey: string] : Handler
-    } = new Controller() as any
+            const routers: IRouter[] = Reflect.hasMetadata(Metadata.routers, controller)
+                ? Reflect.getMetadata(Metadata.routers, controller)
+                : []
+            
+            routers.push({
+                method: method,
+                path,
+                handlerName: propertyKey,
+                middleware: middleware
+            })
 
-    const CentRouter = Router() 
-    ControllerInstances.forEach((instance) => {
-        if (typeof instance.middleware !== "undefined") {
-            CentRouter[instance.Router["method"]](basePath + instance.Router["path"], instance.middleware ,instances[String(instance.handlerName)].bind(instances))   
-        } else {
-            CentRouter[instance.Router["method"]](basePath + instance.Router["path"],instances[String(instance.handlerName)].bind(instances))   
+            // console.log(routers)
+
+            Reflect.defineMetadata(Metadata.routers, routers, controller)
         }
-    })
-    
-    return CentRouter
+    }
 }
+
+// export function GetInstance<controller>(Controller : new(...args: any[]) => controller) {
+//     const Routes: IRouter[] = Reflect.hasMetadata(Metadata.routers, Controller.constructor) ? Reflect.getMetadata(Metadata.routers, Controller.constructor) : []
+//     const ControllerInstances : IControllerInstance[] = []
+//     const basePath: string = Reflect.getMetadata(Metadata.basepath, Controller)
+//     const middlewares : any = Reflect.getMetadata(Metadata.middleware, Controller)
+//     const propertyKey: string = Reflect.getMetadata(Metadata.propertyKey, Controller)
+//     ControllerInstances.push({
+//         Router: Routes,
+//         middleware: middlewares,
+//         handlerName: propertyKey
+//     })
+
+//     const instances: {
+//         [propertyKey: string] : Handler
+//     } = new Controller() as any
+
+//     // console.log(ControllerInstances)
+//     console.log(Routes)
+
+//     const CentRouter = Router() 
+//     ControllerInstances.forEach((instance) => {
+//         // console.log(instance)
+//         if (typeof instance.middleware !== "undefined") {
+//             CentRouter[instance.Router["method"]](basePath + instance.Router["path"], instance.middleware ,instances[String(instance.handlerName)].bind(instances))   
+//         } else {
+//             CentRouter[instance.Router["method"]](basePath + instance.Router["path"],instances[String(instance.handlerName)].bind(instances))   
+//         }
+//     })
+
+//     // console.log(CentRouter)
+    
+//     return CentRouter
+// }
 
 

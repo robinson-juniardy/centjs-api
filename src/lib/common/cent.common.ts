@@ -40,9 +40,11 @@ export interface IControllerInstance {
     handlerName: string | symbol
 }
 
-export function Controller(basePath: string): ClassDecorator {
+export function Controller(basePath: string, middleware? : any | any[]): ClassDecorator {
     return (target: any) => {
         Reflect.defineMetadata(Metadata.basepath, basePath, target)
+        Reflect.defineMetadata(Metadata.middleware, middleware, target)
+        
     }
 }
 
@@ -130,45 +132,9 @@ export function methodDecoratorFactory(method: Methods) {
                 middleware: middleware
             })
 
-            // console.log(routers)
-
             Reflect.defineMetadata(Metadata.routers, routers, controller)
         }
     }
 }
-
-// export function GetInstance<controller>(Controller : new(...args: any[]) => controller) {
-//     const Routes: IRouter[] = Reflect.hasMetadata(Metadata.routers, Controller.constructor) ? Reflect.getMetadata(Metadata.routers, Controller.constructor) : []
-//     const ControllerInstances : IControllerInstance[] = []
-//     const basePath: string = Reflect.getMetadata(Metadata.basepath, Controller)
-//     const middlewares : any = Reflect.getMetadata(Metadata.middleware, Controller)
-//     const propertyKey: string = Reflect.getMetadata(Metadata.propertyKey, Controller)
-//     ControllerInstances.push({
-//         Router: Routes,
-//         middleware: middlewares,
-//         handlerName: propertyKey
-//     })
-
-//     const instances: {
-//         [propertyKey: string] : Handler
-//     } = new Controller() as any
-
-//     // console.log(ControllerInstances)
-//     console.log(Routes)
-
-//     const CentRouter = Router() 
-//     ControllerInstances.forEach((instance) => {
-//         // console.log(instance)
-//         if (typeof instance.middleware !== "undefined") {
-//             CentRouter[instance.Router["method"]](basePath + instance.Router["path"], instance.middleware ,instances[String(instance.handlerName)].bind(instances))   
-//         } else {
-//             CentRouter[instance.Router["method"]](basePath + instance.Router["path"],instances[String(instance.handlerName)].bind(instances))   
-//         }
-//     })
-
-//     // console.log(CentRouter)
-    
-//     return CentRouter
-// }
 
 

@@ -16,6 +16,8 @@ import { Server as OVServer } from "@overnightjs/core";
 import mssql, { IResult } from "mssql"
 import mysql from "mysql"
 import pgsql, { Client, Pool, QueryResult, ResultBuilder } from "pg"
+import multer from "multer";
+import CentHelper from "../app/helper/cent.helper";
 
 export namespace CentJs {
 
@@ -76,6 +78,7 @@ export namespace CentJs {
     export abstract class Application {
         public static Instance = express
         public static Routers = ExRouter
+        public static FormData = multer()
     }
 
     export class Server extends OVServer {
@@ -141,7 +144,7 @@ export namespace CentJs {
                     if (withApiContext) {
                         return ({
                             status: 1,
-                            message: result.recordset.length > 0 ?
+                            message: result[options].length > 0 ?
                                 [apiCustomMessage?.onSuccess ? apiCustomMessage.onSuccess : "success"] :
                                 [apiCustomMessage?.onNotFoundRow ? apiCustomMessage.onNotFoundRow : "data not found"],
                             data: result[options]

@@ -5,6 +5,8 @@ import fs from "fs"
 import { Metadata, methodDecoratorFactory, Methods, IRouter } from "./cent.common";
 function GetInstance<constructor>(Controller: new (...args: any[]) => constructor) {
     if (typeof Controller !== "undefined") {
+        const RouterMiddleware = Reflect.hasMetadata(Metadata.middleware, Controller)
+            ? Reflect.getMetadata(Metadata.middleware, Controller) : undefined
         const RouterInstance: IRouter[] = Reflect.hasMetadata(Metadata.routers, Controller)
             ? Reflect.getMetadata(Metadata.routers, Controller) : []
         const basePath = Reflect.getMetadata(Metadata.basepath, Controller)
@@ -16,17 +18,25 @@ function GetInstance<constructor>(Controller: new (...args: any[]) => constructo
         const Router = CentJs.Application.Routers()
 
         RouterInstance.forEach((instance) => {
-            if (typeof instance.middleware !== "undefined") {
+            if (typeof RouterMiddleware !== "undefined") {
+                Router[instance.method](
+                    basePath + instance.path,
+                    Array.isArray(RouterMiddleware) ? [...RouterMiddleware] : RouterMiddleware,
+                    instances[String(instance.handlerName)].bind(instances)
+                )
+            } else {
+                if (typeof instance.middleware !== "undefined") {
                 Router[instance.method](
                     basePath + instance.path,
                     Array.isArray(instance.middleware) ? [...instance.middleware] : instance.middleware,
                     instances[String(instance.handlerName)].bind(instances)
                 )
-            } else {
-                Router[instance.method](
-                    basePath + instance.path,
-                    instances[String(instance.handlerName)].bind(instances)
-                )
+                } else {
+                    Router[instance.method](
+                        basePath + instance.path,
+                        instances[String(instance.handlerName)].bind(instances)
+                    )
+                }
             }
         })
 
